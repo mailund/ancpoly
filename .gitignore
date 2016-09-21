@@ -31,3 +31,10 @@
 # Debug files
 *.dSYM/
 *.su
+
+AncPoly.build/
+CMakeFiles/
+CMakeScripts/
+Debug/
+DerivedData/
+AncPoly.xcodeproj
