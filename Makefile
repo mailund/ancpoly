@@ -67,6 +67,39 @@ edit_cache/fast: edit_cache
 
 .PHONY : edit_cache/fast
 
+# Special rule for the target list_install_components
+list_install_components:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Available install components are: \"Unspecified\""
+.PHONY : list_install_components
+
+# Special rule for the target list_install_components
+list_install_components/fast: list_install_components
+
+.PHONY : list_install_components/fast
+
+# Special rule for the target install
+install: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/local/Cellar/cmake/3.6.1/bin/cmake -P cmake_install.cmake
+.PHONY : install
+
+# Special rule for the target install
+install/fast: preinstall/fast
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Install the project..."
+	/usr/local/Cellar/cmake/3.6.1/bin/cmake -P cmake_install.cmake
+.PHONY : install/fast
+
+# Special rule for the target install/local
+install/local: preinstall
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Installing only the local directory..."
+	/usr/local/Cellar/cmake/3.6.1/bin/cmake -DCMAKE_INSTALL_LOCAL_ONLY=1 -P cmake_install.cmake
+.PHONY : install/local
+
+# Special rule for the target install/local
+install/local/fast: install/local
+
+.PHONY : install/local/fast
+
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
@@ -111,17 +144,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named bin/sample_freqs
+# Target rules for targets named ancpoly_sample_freqs
 
 # Build rule for target.
-bin/sample_freqs: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 bin/sample_freqs
-.PHONY : bin/sample_freqs
+ancpoly_sample_freqs: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 ancpoly_sample_freqs
+.PHONY : ancpoly_sample_freqs
 
 # fast build rule for target.
-bin/sample_freqs/fast:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/build
-.PHONY : bin/sample_freqs/fast
+ancpoly_sample_freqs/fast:
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/build
+.PHONY : ancpoly_sample_freqs/fast
 
 src/io.o: src/io.c.o
 
@@ -129,7 +162,7 @@ src/io.o: src/io.c.o
 
 # target to build an object file
 src/io.c.o:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/io.c.o
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/io.c.o
 .PHONY : src/io.c.o
 
 src/io.i: src/io.c.i
@@ -138,7 +171,7 @@ src/io.i: src/io.c.i
 
 # target to preprocess a source file
 src/io.c.i:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/io.c.i
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/io.c.i
 .PHONY : src/io.c.i
 
 src/io.s: src/io.c.s
@@ -147,7 +180,7 @@ src/io.s: src/io.c.s
 
 # target to generate assembly for a file
 src/io.c.s:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/io.c.s
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/io.c.s
 .PHONY : src/io.c.s
 
 src/sample_freqs.o: src/sample_freqs.c.o
@@ -156,7 +189,7 @@ src/sample_freqs.o: src/sample_freqs.c.o
 
 # target to build an object file
 src/sample_freqs.c.o:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/sample_freqs.c.o
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/sample_freqs.c.o
 .PHONY : src/sample_freqs.c.o
 
 src/sample_freqs.i: src/sample_freqs.c.i
@@ -165,7 +198,7 @@ src/sample_freqs.i: src/sample_freqs.c.i
 
 # target to preprocess a source file
 src/sample_freqs.c.i:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/sample_freqs.c.i
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/sample_freqs.c.i
 .PHONY : src/sample_freqs.c.i
 
 src/sample_freqs.s: src/sample_freqs.c.s
@@ -174,7 +207,7 @@ src/sample_freqs.s: src/sample_freqs.c.s
 
 # target to generate assembly for a file
 src/sample_freqs.c.s:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/sample_freqs.c.s
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/sample_freqs.c.s
 .PHONY : src/sample_freqs.c.s
 
 src/sampling.o: src/sampling.c.o
@@ -183,7 +216,7 @@ src/sampling.o: src/sampling.c.o
 
 # target to build an object file
 src/sampling.c.o:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/sampling.c.o
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/sampling.c.o
 .PHONY : src/sampling.c.o
 
 src/sampling.i: src/sampling.c.i
@@ -192,7 +225,7 @@ src/sampling.i: src/sampling.c.i
 
 # target to preprocess a source file
 src/sampling.c.i:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/sampling.c.i
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/sampling.c.i
 .PHONY : src/sampling.c.i
 
 src/sampling.s: src/sampling.c.s
@@ -201,7 +234,7 @@ src/sampling.s: src/sampling.c.s
 
 # target to generate assembly for a file
 src/sampling.c.s:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/sampling.c.s
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/sampling.c.s
 .PHONY : src/sampling.c.s
 
 src/trees.o: src/trees.c.o
@@ -210,7 +243,7 @@ src/trees.o: src/trees.c.o
 
 # target to build an object file
 src/trees.c.o:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/trees.c.o
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/trees.c.o
 .PHONY : src/trees.c.o
 
 src/trees.i: src/trees.c.i
@@ -219,7 +252,7 @@ src/trees.i: src/trees.c.i
 
 # target to preprocess a source file
 src/trees.c.i:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/trees.c.i
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/trees.c.i
 .PHONY : src/trees.c.i
 
 src/trees.s: src/trees.c.s
@@ -228,7 +261,7 @@ src/trees.s: src/trees.c.s
 
 # target to generate assembly for a file
 src/trees.c.s:
-	$(MAKE) -f CMakeFiles/bin/sample_freqs.dir/build.make CMakeFiles/bin/sample_freqs.dir/src/trees.c.s
+	$(MAKE) -f CMakeFiles/ancpoly_sample_freqs.dir/build.make CMakeFiles/ancpoly_sample_freqs.dir/src/trees.c.s
 .PHONY : src/trees.c.s
 
 # Help Target
@@ -238,8 +271,11 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... edit_cache"
+	@echo "... list_install_components"
+	@echo "... install"
+	@echo "... install/local"
 	@echo "... rebuild_cache"
-	@echo "... bin/sample_freqs"
+	@echo "... ancpoly_sample_freqs"
 	@echo "... src/io.o"
 	@echo "... src/io.i"
 	@echo "... src/io.s"
