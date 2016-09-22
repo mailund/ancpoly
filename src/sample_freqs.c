@@ -22,8 +22,10 @@ inner nodes.";
 
 /* The options we understand. */
 static struct argp_option options[] = {
-  {"no_samples",  'n', "N",    0,  "Number of samples to make (default 1000)." },
-  {"output",      'o', "FILE", 0,  "Output to FILE instead of standard output" },
+  {"no_samples",  'n', "N",    0,
+      "Number of samples to make (default 1000)." },
+  {"output",      'o', "FILE", OPTION_ARG_OPTIONAL,
+      "Output to FILE instead of standard output" },
   { 0 }
 };
 

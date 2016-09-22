@@ -18,3 +18,11 @@ add_executable(ancpoly_sample_freqs
 )
 install(TARGETS ancpoly_sample_freqs DESTINATION bin)
 target_link_libraries(ancpoly_sample_freqs ${ARGP_LIB})
+
+add_executable(ancpoly_weight_freqs
+  src/weight_freqs.c
+  src/io.h src/io.c
+  src/trees.h src/trees.c
+)
+install(TARGETS ancpoly_weight_freqs DESTINATION bin)
+target_link_libraries(ancpoly_weight_freqs ${ARGP_LIB})
