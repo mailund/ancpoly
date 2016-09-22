@@ -1,0 +1,111 @@
+---
+title: "Estimating posterior allele frequencies in ancestral populations"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+```{r setup, echo=FALSE}
+library(ape)
+```
+
+# The model for allele frequencies and counts
+
+We consider a phylogenetic tree with three leaves and assume that for leaf $i$ we have observed $k_i$ alleles of a selected kind out of $n_i$ observed allele counts. Although we assume that the tree is rooted, we work with a reversible model so we can eliminate one inner node and just consider the center node in the corresponding unrooted tree, $a$.
+
+```{r, echo=FALSE}
+tree <- read.tree(text = "((1,2),3);")
+plot(tree, type = "cladogram", edge.width = 2)
+nodelabels("a", 5)
+```
+
+We model the probability of counts $k_i$ and $n_i$ by first assuming that the allele frequency at node $a$, $f_a$ is given by a beta distribution with parameters $a$ and $b$, $f_a \sim \mathrm{Beta}(a,b)$. The frequency at leaf $i$, $f_i$, is given by $f_i\ |\ f_a \sim \mathrm{Beta}(m(f_a,t_i),v(f_a,t_i))$ where $m$ and $v$ are functions that model the mutation and drift along the edge from $a$ to $i$ and where $t_i$ is the length of the edge. There really should be two lengths, one measured in drift and one in mutations, but to keep it simple we only use one for now. Given $f_i$ the counts at leaf $i$ are just binomially distributed $k_i\ |\ f_i,n_i \sim \mathrm{bin}(f_i,n_i)$.
+
+# Computing the likelihood of counts
+
+The prior for $f_a$ is a beta distribution with parameters $a$ and $b$.
+
+```{r}
+make_f_a_prior <- function(a, b) function(f_a) dbeta(f_a, a, b)
+```
+
+For test purposes we just make one with some arbitrary values for $a$ and $b$.
+
+```{r}
+f_a_prior <- make_f_a_prior(0.1, 0.7)
+f_a <- seq(0, 1, length.out = 100)
+plot(f_a, f_a_prior(f_a), type = 'l', 
+     xlab = expression(f[a]), ylab = expression(pi*(f[a])))
+```
+
+As a simple model for now we assume that there is only drift going on along edges, and no mutations, which makes the $m$ and $v$ functions simple. I am actually using a normal distribution here instead of a beta distribution **because I think the formula on my whiteboard is wrong -- I don't get anything meaninful out of using it**.
+
+```{r}
+m <- function(f_a, t_i) f_a
+v <- function(f_a, t_i) (1 - exp(-t_i)) * f_a * (1 - f_a)
+conditional_f_i <- function(f_i, t_i, f_a) dnorm(f_i, m(f_a, t_i), v(f_a, t_i))
+```
+
+```{r}
+f_a <- 0.2 ; t_i <- 0.2
+f_i <- seq(0, 1, length.out = 500)
+plot(f_i, conditional_f_i(f_i, t_i, f_a), type = 'l', 
+     xlab = expression(f[i]), ylab = expression(p*(f[i])))
+abline(v = f_a, col = "red")
+```
+
+Since I am using a normal distribution here, I can't just do the magic that conjugate priors do, so I have to compute the probability of the observed counts using numerical integration. This should be fixed when we use the right formula.
+
+```{r}
+conditional_k_i <- function(k_i, n_i, t_i, f_a) {
+  f <- function(f_i) dbinom(k_i, n_i, f_i) * conditional_f_i(f_i, t_i, f_a)
+  integrate(f, 0, 1)$value
+}
+conditional_k_i <- Vectorize(conditional_k_i, vectorize.args = c("k_i", "n_i", "t_i"))
+```
+
+To get the likelihood for $f_a$ we just fix all the observed parameters -- and here we assume that the $t_i$s are observed -- and get a function just of $f_a$.
+
+```{r}
+make_likelihood_f_a <- function(ks, ns, ts) {
+  function(f_a) prod(conditional_k_i(ks, ns, ts, f_a))
+}
+```
+
+## Experiment
+
+To experiment with the model we can simulate data under it. This is slightly easier than computing the likelihood; we need the same math but we can directly sample and do not need to integrate. We do it like this:
+
+```{r}
+simulate_counts <- function(ns, ts, f_a = NULL, a = 0.1, b = 0.7) {
+  if (is.null(f_a)) f_a <- rbeta(1, a, b)
+  
+  fs <- unlist(Map(rnorm, 1, m(f_a, ts), v(f_a, ts)))
+  ks <- unlist(Map(rbinom, 1, ns, fs))
+  list(f_a = f_a, fs = fs, ks = ks)
+}
+```
+
+```{r}
+ns <- c(10,12,10)
+ts <- c(0.05,0.08,0.1)
+sim_f_a <- 0.3
+sim_results <- simulate_counts(ns, ts, f_a = sim_f_a)
+
+f <- seq(0, 1, length.out = 300)
+
+plot(f, conditional_f_i(f, ts[1], sim_f_a), col = "red", type = "l",
+     xlab = expression(f[i]), ylab = expression(p(f[i], f[a])))
+lines(f, conditional_f_i(f, ts[2], sim_f_a), col = "green", type = "l")
+lines(f, conditional_f_i(f, ts[3], sim_f_a), col = "blue", type = "l")
+rug(sim_results$fs[1], col = "red", lwd = 2)
+rug(sim_results$fs[2], col = "green", lwd = 2)
+rug(sim_results$fs[3], col = "blue", lwd = 2)
+```
+
+```{r}
+lik <- Vectorize(make_likelihood_f_a(sim_results$ks, ns, ts))
+plot(f, lik(f), type = 'l', 
+     xlab = expression(f[a]), ylab = expression(L(f[a])))
+abline(v = sim_f_a, col = "red")
+```

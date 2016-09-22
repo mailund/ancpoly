@@ -38,3 +38,4 @@ CMakeScripts/
 Debug/
 DerivedData/
 AncPoly.xcodeproj
+.Rproj.user
