@@ -32,35 +32,65 @@ make_f_a_prior <- function(a, b) function(f_a) dbeta(f_a, a, b)
 For test purposes we just make one with some arbitrary values for $a$ and $b$.
 
 ```{r}
-f_a_prior <- make_f_a_prior(0.1, 0.7)
+prior_a <- 1.5
+prior_b <- 1.5
+f_a_prior <- make_f_a_prior(prior_a, prior_b)
 f_a <- seq(0, 1, length.out = 100)
 plot(f_a, f_a_prior(f_a), type = 'l', 
      xlab = expression(f[a]), ylab = expression(pi*(f[a])))
 ```
 
-As a simple model for now we assume that there is only drift going on along edges, and no mutations, which makes the $m$ and $v$ functions simple. I am actually using a normal distribution here instead of a beta distribution **because I think the formula on my whiteboard is wrong -- I don't get anything meaninful out of using it**.
+As a simple model for now we assume that there is only drift going on along edges, and no mutations, which makes the $m$ and $v$ functions simple.
 
 ```{r}
 m <- function(f_a, t_i) f_a
 v <- function(f_a, t_i) (1 - exp(-t_i)) * f_a * (1 - f_a)
-conditional_f_i <- function(f_i, t_i, f_a) dnorm(f_i, m(f_a, t_i), v(f_a, t_i))
+m_shape <- function(f_a, t_i) {
+  mn <- m(f_a, t_i)
+  vr <- v(f_a, t_i)
+  (mn*(1-mn)/vr-1)*mn
+}
+v_shape <- function(f_a, t_i) {
+  mn <- m(f_a, t_i)
+  vr <- v(f_a, t_i)
+  (mn*(1-mn)/vr-1)*(1-mn)
+}
+conditional_f_i <- function(f_i, t_i, f_a) dbeta(f_i, m_shape(f_a, t_i), v_shape(f_a, t_i))
 ```
 
 ```{r}
 f_a <- 0.2 ; t_i <- 0.2
 f_i <- seq(0, 1, length.out = 500)
-plot(f_i, conditional_f_i(f_i, t_i, f_a), type = 'l', 
+plot(f_i, conditional_f_i(f_i, t_i, f_a), type = 'l', col = 'red',
      xlab = expression(f[i]), ylab = expression(p*(f[i])))
 abline(v = f_a, col = "red")
+
+f_a <- 0.5 ; t_i <- 0.2
+f_i <- seq(0, 1, length.out = 500)
+lines(f_i, conditional_f_i(f_i, t_i, f_a), type = 'l', col = 'blue')
+abline(v = f_a, col = "blue")
+
+f_a <- 0.7 ; t_i <- 0.2
+f_i <- seq(0, 1, length.out = 500)
+lines(f_i, conditional_f_i(f_i, t_i, f_a), type = 'l', col = 'darkgreen')
+abline(v = f_a, col = "darkgreen")
+
+lines(f_i, f_a_prior(f_i), lty = "dashed")
 ```
 
-Since I am using a normal distribution here, I can't just do the magic that conjugate priors do, so I have to compute the probability of the observed counts using numerical integration. This should be fixed when we use the right formula.
+The probability for observed allele counts is now Beta-Binomial, so we have this:
 
 ```{r}
-conditional_k_i <- function(k_i, n_i, t_i, f_a) {
-  f <- function(f_i) dbinom(k_i, n_i, f_i) * conditional_f_i(f_i, t_i, f_a)
-  integrate(f, 0, 1)$value
+dbetabinom <- function(al,be,n,x){
+  term1 <- choose(n,x)
+  term2 <- beta(al+x,be+(n-x))
+  term3 <- beta(al,be)
+  return(term1*term2/term3)
 }
+
+conditional_k_i <- function(k_i, n_i, t_i, f_a) 
+  dbetabinom(m_shape(f_a, t_i), v_shape(f_a, t_i), n_i, k_i)
+
 conditional_k_i <- Vectorize(conditional_k_i, vectorize.args = c("k_i", "n_i", "t_i"))
 ```
 
@@ -77,10 +107,10 @@ make_likelihood_f_a <- function(ks, ns, ts) {
 To experiment with the model we can simulate data under it. This is slightly easier than computing the likelihood; we need the same math but we can directly sample and do not need to integrate. We do it like this:
 
 ```{r}
-simulate_counts <- function(ns, ts, f_a = NULL, a = 0.1, b = 0.7) {
+simulate_counts <- function(ns, ts, f_a = NULL, a = prior_a, b = prior_b) {
   if (is.null(f_a)) f_a <- rbeta(1, a, b)
   
-  fs <- unlist(Map(rnorm, 1, m(f_a, ts), v(f_a, ts)))
+  fs <- unlist(Map(rbeta, 1, m_shape(f_a, ts), v_shape(f_a, ts)))
   ks <- unlist(Map(rbinom, 1, ns, fs))
   list(f_a = f_a, fs = fs, ks = ks)
 }
@@ -104,8 +134,41 @@ rug(sim_results$fs[3], col = "blue", lwd = 2)
 ```
 
 ```{r}
+epsilon <- 1e-10
+f <- seq(epsilon, 1-epsilon, length.out = 300)
 lik <- Vectorize(make_likelihood_f_a(sim_results$ks, ns, ts))
 plot(f, lik(f), type = 'l', 
      xlab = expression(f[a]), ylab = expression(L(f[a])))
 abline(v = sim_f_a, col = "red")
+```
+
+```{r}
+opar <- par(mfrow = c(2, 2))
+
+sim_results <- simulate_counts(ns, ts)
+lik <- Vectorize(make_likelihood_f_a(sim_results$ks, ns, ts))
+plot(f, lik(f), type = 'l', 
+     xlab = expression(f[a]), ylab = expression(L(f[a])))
+abline(v = sim_results$f_a, col = "red")
+
+sim_results <- simulate_counts(ns, ts)
+lik <- Vectorize(make_likelihood_f_a(sim_results$ks, ns, ts))
+plot(f, lik(f), type = 'l', 
+     xlab = expression(f[a]), ylab = expression(L(f[a])))
+abline(v = sim_results$f_a, col = "red")
+
+sim_results <- simulate_counts(ns, ts)
+lik <- Vectorize(make_likelihood_f_a(sim_results$ks, ns, ts))
+plot(f, lik(f), type = 'l', 
+     xlab = expression(f[a]), ylab = expression(L(f[a])))
+abline(v = sim_results$f_a, col = "red")
+
+sim_results <- simulate_counts(ns, ts)
+lik <- Vectorize(make_likelihood_f_a(sim_results$ks, ns, ts))
+plot(f, lik(f), type = 'l', 
+     xlab = expression(f[a]), ylab = expression(L(f[a])))
+abline(v = sim_results$f_a, col = "red")
+
+par(opar)
+
 ```
